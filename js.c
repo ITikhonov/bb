@@ -1,12 +1,76 @@
+#include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
+
+char b_ident[128], *ident=0;
+
+// Punctuation, Identifier, Number, String, RegEx
+
+char b_stack[1024]={0},*stack=b_stack;
+
+#define CL "\x1b[01;35m["
+#define RS "]\x1b[00m"
+
+int priority(char c) {
+	switch(c) {
+	case '/': return 5;
+	case '+': return 6;
+	case '=': return 16;
+	case ';': return 100;
+	case '\0': return 120;
+	}
+}
+
+int state='X',state1='0';
+void parse(int c) {
+	printf("\x1b[01;31m%c%c:%c(%.*s)\x1b[00m",state,state1,c,(int)(stack-b_stack),b_stack);
+	switch(state) {
+	case 'X':
+		if(c=='I') {
+			printf(CL"ident %.*s"RS,(int)(ident-b_ident),b_ident);
+			state='2';
+		} else { goto abort; }
+		break;
+	case '2':
+		if(c=='=') { *stack++='='; state='3'; }
+		else { goto abort; }
+		break;
+	case '3':
+		if(c=='N') { printf(CL"num %.*s"RS,(int)(ident-b_ident),b_ident); }
+		else if(c=='+') {
+			if(stack[-1]=='+') { printf(CL"op%c"RS,stack[-1]); stack[-1]=c; }
+			else { goto unstack; }
+		} else if(c=='/') { if(stack[-1]=='/') { printf(CL"op%c"RS,stack[-1]); stack[-1]=c; } else {*stack++=c;} }
+		else if(c==';') { goto unstack; }
+		else { goto abort; }
+		break;
+	default:
+		goto abort;
+	}
+	return;
+
+unstack: while(priority(stack[-1])<=priority(c)) {
+		printf(CL"op%c"RS,stack[-1]);
+			stack--;
+	}
+	*stack++=c;
+
+	return;
+
+abort:	printf("\n Parse abort: char '%c' state '%c'\n",c,state);
+	abort();
+}
+
+/* ============================================= */
 
 int isspace(int c) {
 	if(c==' ') return 1;
 	if(c=='\t') return 1;
 	if(c=='\n') return 1;
 	if(c=='\r') return 1;
+	return 0;
 }
 
 int isident(int c) {
@@ -38,10 +102,11 @@ RegEx
 */
 
 int main() {
+	int fd=open("test.js",O_RDONLY);
+
 	char buf[1024];
-	int n=read(0,buf,1024);
+	int n=read(fd,buf,1024);
 	int c,i,state='X',q,esc, last='X',pstate=0;
-	char b_ident[128], *ident=0;
 	for(;;) {
 		for(i=0;i<n;i++) {
 			c=buf[i];
@@ -51,10 +116,10 @@ int main() {
 			state_X:
 				state='X'; 
 				if(c=='/') { state='/'; }
-				else if(ispunctuation(c)) { if(c==')') { last='E'; } else { last='P'; } }
+				else if(ispunctuation(c)) { parse(c); if(c==')') { last='E'; } else { last='P'; } }
 				else if(isspace(c)) { state='W'; }
 				else if(c=='\''||c=='"') { state='S'; q=c; esc=0; last='S'; }
-				else if(isdigit(c)) { state='N'; last='N'; }
+				else if(isdigit(c)) { state='N'; last='N'; ident=b_ident; *ident++=c; }
 				else if(isident(c)) { state='I'; last='I'; ident=b_ident; *ident++=c; }
 				else { goto abort; }
 				break;
@@ -64,18 +129,17 @@ int main() {
 				break;
 			case 'I':
 				if(isident(c)) { *ident++=c; }
-				else { goto state_X; }
+				else { parse('I'); goto state_X; }
 				break;
 			case 'S':
 				if(esc) { esc=0; }
-				else if(c==q) { state='X'; }
+				else if(c==q) { parse('S'); state='X'; }
 				else if(c=='\\') { esc=1; }
 				else { /* nothing */ }
 				break;
 			case 'N':
-				if(isdigit(c)) { /* nothing */ }
-				else if(c=='.') { /* nothing */ }
-				else {goto state_X; }
+				if(isdigit(c) || c=='.') { *ident++=c; }
+				else { parse('N'); goto state_X; }
 				break;
 			case '/':
 				printf("\x1b[01;31m%c\x1b[00m" "\x1b[01;33m%.*s\x1b[00m",last,(int)(ident-b_ident),b_ident);
@@ -83,13 +147,13 @@ int main() {
 				else if(c=='/') { state='c'; }
 				else if(last!='N'&&last!='I'&&last!='E') { esc=0; state='R'; goto state_R; }
 				else if(last=='I'&&strncmp(b_ident,"return",6)==0) { esc=0; state='R'; goto state_R; }
-				else { goto state_X; }
+				else { parse('/'); goto state_X; }
 				break;
 			case 'R':
 			state_R:
 				if(esc) { esc=0; }
 				else if(c=='\\') { esc=1; }
-				else if(c=='/') { state='X'; }
+				else if(c=='/') { parse('R'); state='X'; }
 				else { /* nothing */ }
 				break;
 			case 'C':
@@ -108,7 +172,7 @@ int main() {
 			if(pstate!=state) { printf("\x1b[01;32m%c\x1b[00m",state); }
 			pstate=state;
 		}
-		n=read(0,buf,1024);
+		n=read(fd,buf,1024);
 		if(n==0) break;
 	}
 
