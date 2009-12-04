@@ -15,8 +15,10 @@ char b_stack[1024]={0},*stack=b_stack;
 
 int priority(char c) {
 	switch(c) {
-	case '/': return 5;
-	case '+': return 6;
+	case '/':
+	case '*': return 5;
+	case '+':
+	case '-': return 6;
 	case '=': return 16;
 	case ';': return 100;
 	case '\0': return 120;
@@ -43,11 +45,12 @@ void parse(int c) {
 		break;
 	case '3':
 		if(c=='N') { out1("num"); }
-		else if(c=='+') {
-			if(stack[-1]=='+') { outo(stack[-1]); stack[-1]=c; }
+		else if(c=='I') { out1("get"); }
+		else if(c=='+'||c=='-') {
+			if(stack[-1]=='+'||stack[-1]=='-') { outo(stack[-1]); stack[-1]=c; }
 			else { goto unstack; }
-		} else if(c=='/') { if(stack[-1]=='/') { outo(stack[-1]); stack[-1]=c; } else {*stack++=c;} }
-		else if(c==';') { goto unstack; }
+		} else if(c=='/'||c=='*') { if(stack[-1]=='/'||stack[-1]=='*') { outo(stack[-1]); stack[-1]=c; } else {*stack++=c;} }
+		else if(c==';') { state='X'; goto unstack; }
 		else { goto abort; }
 		break;
 	default:
@@ -59,7 +62,7 @@ unstack: while(priority(stack[-1])<=priority(c)) {
 		outo(stack[-1]);
 		stack--;
 	}
-	*stack++=c;
+	if(state=='3') *stack++=c;
 
 	return;
 
