@@ -23,13 +23,17 @@ int priority(char c) {
 	}
 }
 
+void out1(char *i) { printf(CL"%s %.*s"RS,i,(int)(ident-b_ident),b_ident);
+		     fprintf(stderr,"%s %.*s\n",i,(int)(ident-b_ident),b_ident); }
+void outo(char i) { printf(CL"op%c"RS,i); fprintf(stderr,"op%c\n",i); }
+
 int state='X',state1='0';
 void parse(int c) {
 	printf("\x1b[01;31m%c%c:%c(%.*s)\x1b[00m",state,state1,c,(int)(stack-b_stack),b_stack);
 	switch(state) {
 	case 'X':
 		if(c=='I') {
-			printf(CL"ident %.*s"RS,(int)(ident-b_ident),b_ident);
+			out1("ident");
 			state='2';
 		} else { goto abort; }
 		break;
@@ -38,11 +42,11 @@ void parse(int c) {
 		else { goto abort; }
 		break;
 	case '3':
-		if(c=='N') { printf(CL"num %.*s"RS,(int)(ident-b_ident),b_ident); }
+		if(c=='N') { out1("num"); }
 		else if(c=='+') {
-			if(stack[-1]=='+') { printf(CL"op%c"RS,stack[-1]); stack[-1]=c; }
+			if(stack[-1]=='+') { outo(stack[-1]); stack[-1]=c; }
 			else { goto unstack; }
-		} else if(c=='/') { if(stack[-1]=='/') { printf(CL"op%c"RS,stack[-1]); stack[-1]=c; } else {*stack++=c;} }
+		} else if(c=='/') { if(stack[-1]=='/') { outo(stack[-1]); stack[-1]=c; } else {*stack++=c;} }
 		else if(c==';') { goto unstack; }
 		else { goto abort; }
 		break;
@@ -52,8 +56,8 @@ void parse(int c) {
 	return;
 
 unstack: while(priority(stack[-1])<=priority(c)) {
-		printf(CL"op%c"RS,stack[-1]);
-			stack--;
+		outo(stack[-1]);
+		stack--;
 	}
 	*stack++=c;
 
