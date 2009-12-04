@@ -22,6 +22,7 @@ int priority(char c) {
 	case '=': return 16;
 	case ';': return 100;
 	case '\0': return 120;
+	default: return 0;
 	}
 }
 
@@ -46,12 +47,15 @@ void parse(int c) {
 	case '3':
 		if(c=='N') { out1("num"); }
 		else if(c=='I') { out1("get"); }
-		else if(c=='+'||c=='-') {
-			if(stack[-1]=='+'||stack[-1]=='-') { outo(stack[-1]); stack[-1]=c; }
-			else { goto unstack; }
-		} else if(c=='/'||c=='*') { if(stack[-1]=='/'||stack[-1]=='*') { outo(stack[-1]); stack[-1]=c; } else {*stack++=c;} }
 		else if(c==';') { state='X'; goto unstack; }
-		else { goto abort; }
+		else {
+			int pc=priority(c);
+			if(!pc) goto abort;
+			int pl=priority(stack[-1]);
+			if(pc==pl) { outo(stack[-1]); stack[-1]=c; }
+			else if(pc<pl) {*stack++=c;}
+			else { goto unstack; }
+		}
 		break;
 	default:
 		goto abort;
