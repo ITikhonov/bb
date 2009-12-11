@@ -22,7 +22,11 @@ int priority(char c) {
 	case '=': return 16;
 	case ';': return 100;
 	case '\0': return 120;
-	default: return 0;
+	case '(': return 255;
+	case ')': return 255;
+	default:
+		printf("\n\nNo priority for '%c'\n",c);
+		abort();
 	}
 }
 
@@ -32,7 +36,7 @@ void outo(char i) { printf(CL"op%c"RS,i); fprintf(stderr,"op%c\n",i); }
 
 int state='X',state1='0';
 void parse(int c) {
-	printf("\x1b[01;31m%c%c:%c(%.*s)\x1b[00m",state,state1,c,(int)(stack-b_stack),b_stack);
+	printf("\x1b[01;31m%c%c:%c[%.*s]\x1b[00m",state,state1,c,(int)(stack-b_stack),b_stack);
 	switch(state) {
 	case 'X':
 		if(c=='I') {
@@ -48,6 +52,8 @@ void parse(int c) {
 		if(c=='N') { out1("num"); }
 		else if(c=='I') { out1("get"); }
 		else if(c==';') { state='X'; goto unstack; }
+		else if(c=='(') { *stack++='('; out1("com ("); }
+		else if(c==')') { out1("com )"); goto unstack; }
 		else {
 			int pc=priority(c);
 			if(!pc) goto abort;
@@ -65,8 +71,9 @@ void parse(int c) {
 unstack: while(priority(stack[-1])<=priority(c)) {
 		outo(stack[-1]);
 		stack--;
+		if(stack[-1]=='(') { stack--; break; }
 	}
-	if(state=='3') *stack++=c;
+	if(state=='3' && c!=')') *stack++=c;
 
 	return;
 
