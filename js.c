@@ -8,26 +8,22 @@ char b_ident[128], *ident=0;
 
 // Punctuation, Identifier, Number, String, RegEx
 
-char b_stack[1024]={0},*stack=b_stack;
+char b_stack[1024]={},*stack=b_stack;
 
 #define CL "\x1b[01;35m["
 #define RS "]\x1b[00m"
 
 int priority(char c) {
 	switch(c) {
+	case 'f': return 2;
 	case '/':
 	case '*': return 5;
 	case '+':
 	case '-': return 6;
 	case '=': return 16;
 	case ',': return 17;
-	case ';': return 100;
-	case '\0': return 120;
-	case 'f': 
-	case '(': 
-	case ')': return 255;
 	default:
-		printf("\n\nNo priority for '%c'\n",c);
+		printf("\n\nNo priority for '%c' (%x)\n",c,c);
 		abort();
 	}
 }
@@ -37,61 +33,40 @@ void out1(char *i) { printf(CL"%s %.*s"RS,i,(int)(ident-b_ident),b_ident);
 void outo(char i) { printf(CL"op%c"RS,i); fprintf(stderr,"op%c\n",i); }
 void outc(char i,char c) { printf(CL"com %c'%c'"RS,i,c); fprintf(stderr,"com %c'%c'\n",i,c); }
 
+void unstack(char c) {
+	int pl=c==-1?255:priority(c);
+	while(stack>b_stack && stack[-1]!='(' && priority(stack[-1])<=pl) { if(stack[-1]!=',') outo(stack[-1]); stack--; }
+}
+
 int state='X';
 void parse(int c) {
 	printf("\x1b[01;31m%c:%c[%.*s]\x1b[00m",state,c,(int)(stack-b_stack),b_stack);
 	switch(state) {
 	case 'X':
-		if(c=='I') {
-			out1("ident");
-			state='2';
-		} else { goto abort; }
+		if(c=='I') { out1("ident"); state='2'; } else { goto abort; }
 		break;
 	case '2':
-		if(c=='=') { *stack++='='; state='3'; }
-		else { goto abort; }
+		if(c=='=') { *stack++='='; state='3'; } else { goto abort; }
 		break;
 	case 'F':
-		state='3';
-		if(c=='(') { *stack++='f'; outo('('); break; }
+		state='3'; if(c=='(') { *stack++='f'; *stack++='('; outo('('); break; }
 	case '3':
 		if(c=='N') { out1("num"); }
 		else if(c=='I') { out1("get"); state='F'; }
-		else if(c==';') { state='X'; goto unstack; }
+		else if(c==';') { state='X'; unstack(-1); out1("com ====="); }
 		else if(c=='(') { *stack++='('; out1("com ("); }
-		else if(c==')') { out1("com )"); goto unstack; }
-		else {
-			int pc=priority(c);
-			if(!pc) goto abort;
-			int pl=priority(stack[-1]);
-			if(pc==pl) { outo(stack[-1]); stack[-1]=c; }
-			else if(pc<pl) {*stack++=c;}
-			else { goto unstack; }
-		}
+		else if(c==')') { unstack(-1); stack--; }
+		else { unstack(c); *stack++=c; }
 		break;
 	default:
 		goto abort;
 	}
 	return;
 
-unstack:
-	outc('\\',c);
-	while(priority(stack[-1])<=priority(c)) {
-		if(stack[-1]!=',') outo(stack[-1]);
-		stack--;
-		if(c==')'){
-			if(stack[-1]=='(') { stack--; break; }
-			if(stack[-1]=='f') { stack--; outo(')'); break; }
-		}
-	}
-	if(state=='3' && c!=')' && c!=',') *stack++=c;
-	outc('/',c);
-
-	return;
-
 abort:	printf("\n Parse abort: char '%c' state '%c'\n",c,state);
 	abort();
 }
+
 
 /* ============================================= */
 

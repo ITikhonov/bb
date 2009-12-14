@@ -19,7 +19,7 @@ for l in c:
 	elif l[0]=='op(':
 		r.append([])
 		s=r[-1]
-	elif l[0]=='op)':
+	elif l[0]=='opf':
 		arg=r.pop()
 		s=r[-1]
 		s.append(s.pop()(*arg))
