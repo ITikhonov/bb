@@ -1,0 +1,57 @@
+<html>
+<head>
+<style>
+body{margin:1em auto;max-width:40em;font-family:georgia,serif;text-align:justify}
+pre{border-left:1px solid black;padding-left:3em}
+</style>
+</head>
+<body>
+
+<p>We need to compile</p>
+<pre>
+x=10;
+print(x);
+r=function(){
+	var c=x*Math.pow(20,x+2)+3;
+	if(1/x) { print(c); }
+	return x+1;
+}();
+</pre>
+
+<h3>Current goals</h3>
+
+<p>Clean up mode '3'.</p>
+<p>Introduce assignment in mode '3'.</p>
+<p>Remove special handling of assignment (modes 'X' and '2').</p>
+
+<h3>Program</h3>
+
+<p>State of compiler consists of operator stack (opstack) and mode.
+   We start with empty opstack and in mode 'X'.
+   On each itteration we receive one symbol which is identifier, number or punctuation.</p>
+
+<p>When we in mode 'X' and see an identifier we compile it as <code>ident
+<i>identifier</i></code> and switch to mode '2'.</p>
+
+<p>In mode '2' if we see punctuation '=' we push it on opstack and switch
+to mode '3'.</p>
+
+<p>In mode '3' if we see number we just compile it as <code>num
+<i>n</i></code>, identifier could be either variable operand, function
+call, or function declaration so we simply go to state 'F' postponing
+decision.
+
+<p>Punctuation handled are parens, semicolon and arithmetic operators. For
+operator we pop and compile all operators on opstack with priority lower
+then or equal to this operator.</p>
+
+<blockquote>if we have expression <code>a=2+2*</code> we have opstack '=+'
+when we encounter '*' so we compile '+'.</blockquote>
+
+<p>When we bump into '(' we start new opstack, when we bump into ')' we
+compile all operators from current opstack and go back to previous opstack.</p>
+
+<p>When we bump into ';' we compile all operands from opstack and switch
+to mode 'X'</p>
+
+</body></html>
