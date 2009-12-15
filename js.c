@@ -20,12 +20,18 @@ int priority(char c) {
 	case '*': return 5;
 	case '+':
 	case '-': return 6;
-	case '=': return 16;
+	case '=': return -16;
 	case ',': return 17;
 	default:
 		printf("\n\nNo priority for '%c' (%x)\n",c,c);
 		abort();
 	}
+}
+
+int priocmp(int pl) {
+	int ps=abs(priority(stack[-1]));
+	if(pl>0) { return ps<=pl; }
+	return ps<(-pl);
 }
 
 void out1(char *i) { printf(CL"%s %.*s"RS,i,(int)(ident-b_ident),b_ident);
@@ -34,8 +40,8 @@ void outo(char i) { printf(CL"op%c"RS,i); fprintf(stderr,"op%c\n",i); }
 void outc(char i,char c) { printf(CL"com %c'%c'"RS,i,c); fprintf(stderr,"com %c'%c'\n",i,c); }
 
 void unstack(char c) {
-	int pl=c==-1?255:priority(c);
-	while(stack>b_stack && stack[-1]!='(' && priority(stack[-1])<=pl) { if(stack[-1]!=',') outo(stack[-1]); stack--; }
+	int pl=c?priority(c):255;
+	while(stack>b_stack && stack[-1]!='(' && priocmp(pl)) { if(stack[-1]!=',') outo(stack[-1]); stack--; }
 }
 
 int state='X';
@@ -49,13 +55,15 @@ void parse(int c) {
 		if(c=='=') { *stack++='='; state='3'; } else { goto abort; }
 		break;
 	case 'F':
-		state='3'; if(c=='(') { *stack++='f'; *stack++='('; outo('('); break; }
+		state='3';
+		out1(c=='=' ? "ident" : "get");
+		if(c=='(') { *stack++='f'; *stack++='('; outo('('); break; }
 	case '3':
 		if(c=='N') { out1("num"); }
-		else if(c=='I') { out1("get"); state='F'; }
-		else if(c==';') { state='X'; unstack(-1); out1("com ====="); }
+		else if(c=='I') { state='F'; }
+		else if(c==';') { state='X'; unstack(0); outo(';'); }
 		else if(c=='(') { *stack++='('; out1("com ("); }
-		else if(c==')') { unstack(-1); stack--; }
+		else if(c==')') { unstack(0); stack--; }
 		else { unstack(c); *stack++=c; }
 		break;
 	default:
