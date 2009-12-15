@@ -48,20 +48,14 @@ int state='X';
 void parse(int c) {
 	printf("\x1b[01;31m%c:%c[%.*s]\x1b[00m",state,c,(int)(stack-b_stack),b_stack);
 	switch(state) {
-	case 'X':
-		if(c=='I') { out1("ident"); state='2'; } else { goto abort; }
-		break;
-	case '2':
-		if(c=='=') { *stack++='='; state='3'; } else { goto abort; }
-		break;
 	case 'F':
-		state='3';
+		state='X';
 		out1(c=='=' ? "ident" : "get");
 		if(c=='(') { *stack++='f'; *stack++='('; outo('('); break; }
-	case '3':
+	case 'X':
 		if(c=='N') { out1("num"); }
 		else if(c=='I') { state='F'; }
-		else if(c==';') { state='X'; unstack(0); outo(';'); }
+		else if(c==';') { unstack(0); outo(';'); }
 		else if(c=='(') { *stack++='('; out1("com ("); }
 		else if(c==')') { unstack(0); stack--; }
 		else { unstack(c); *stack++=c; }
