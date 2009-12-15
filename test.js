@@ -10,3 +10,8 @@ f=pow(a,pow(b,0.5)+pow(c,0.5));
 
 g=2+(g=1);
 h=h=3*2+1;
+
+pow(2,3);
+i=function() { j=pow(2,3); };
+i();
+

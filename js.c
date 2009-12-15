@@ -34,10 +34,14 @@ int priocmp(int pl) {
 	return ps<(-pl);
 }
 
+int closuren=0;
+
 void out1(char *i) { printf(CL"%s %.*s"RS,i,(int)(ident-b_ident),b_ident);
 		     fprintf(stderr,"%s %.*s\n",i,(int)(ident-b_ident),b_ident); }
 void outo(char i) { printf(CL"op%c"RS,i); fprintf(stderr,"op%c\n",i); }
 void outc(char i,char c) { printf(CL"com %c'%c'"RS,i,c); fprintf(stderr,"com %c'%c'\n",i,c); }
+void outn(char *i, int n) { printf(CL"%s %d"RS,i,n);
+		     fprintf(stderr,"%s %d\n",i,n); }
 
 void unstack(char c) {
 	int pl=c?priority(c):255;
@@ -48,16 +52,23 @@ int state='X';
 void parse(int c) {
 	printf("\x1b[01;31m%c:%c[%.*s]\x1b[00m",state,c,(int)(stack-b_stack),b_stack);
 	switch(state) {
+	case 'C':
+		if(c=='{') { *stack++='('; state='X'; outn("def",closuren); }
+		break;
 	case 'F':
 		state='X';
 		out1(c=='=' ? "ident" : "get");
 		if(c=='(') { *stack++='f'; *stack++='('; outo('('); break; }
 	case 'X':
 		if(c=='N') { out1("num"); }
-		else if(c=='I') { state='F'; }
+		else if(c=='I') {
+			int l=ident-b_ident;
+			if(l==8&&memcmp("function",b_ident,ident-b_ident)==0) { state='C'; }
+			else { state='F'; } }
 		else if(c==';') { unstack(0); outo(';'); }
 		else if(c=='(') { *stack++='('; out1("com ("); }
 		else if(c==')') { unstack(0); stack--; }
+		else if(c=='}') { unstack(0); stack--; outn("end",closuren++); }
 		else { unstack(c); *stack++=c; }
 		break;
 	default:
