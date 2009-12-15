@@ -23,6 +23,9 @@ r=function(){
 <p><strike>Clean up mode '3'.</strike></p>
 <p><strike>Introduce assignment in mode '3'.</strike></p>
 <p><strike>Remove special handling of assignment (modes 'X' and '2').</strike></p>
+<p>Add closure expression.</p>
+<p>Add closure expression parameters.</p>
+
 
 <h3>Program</h3>
 
@@ -48,4 +51,20 @@ compile all operators from current opstack and go back to previous opstack.</p>
 
 <p>When we bump into ';' we compile all operands from opstack.</p>
 
+<h3>Closures</h3>
+
+<p>Closures begin with</p>
+<pre>function ( ) {</pre>
+<p>and ends with '<code>}</code>'. When we bump into 'function' identifier we switch to mode 'C' and consume everything until '{' seen then we push '(' to opstack to mark new bottom and switch to mode 'X'.</p>
+
+<p>When we see '}' in mode 'X' we compile 'ret' and pop out ')' from opstack.</p>
+
+<p>Closures code is compiled the very same as global code but with jmp around.</p>
+
+<pre>def <i>n</i></pre>
+
+<p>So next <i>n</i> instructions should not be executed immediately. Instead, next instruction address is pushed on the stack and interpreter skips <i>n</n> instructions.</p>
+
 </body></html>
+
+
