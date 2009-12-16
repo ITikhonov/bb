@@ -22,6 +22,7 @@ int priority(char c) {
 	case '-': return 6;
 	case '=': return -16;
 	case ',': return 17;
+	case 'v': return 100;
 	default:
 		printf("\n\nNo priority for '%c' (%x)\n",c,c);
 		abort();
@@ -44,7 +45,7 @@ void outn(char *i, int n) { printf(CL"%s %d"RS,i,n);
 
 void unstack(char c) {
 	int pl=c?priority(c):255;
-	while(stack>b_stack && stack[-1]!='(' && priocmp(pl)) { if(stack[-1]!=',') outo(stack[-1]); stack--; }
+	while(stack>b_stack && stack[-1]!='(' && priocmp(pl)) { if(stack[-1]!=','&&stack[-1]!='v') outo(stack[-1]); stack--; }
 }
 
 int b_fstack[1024],*fstack=b_fstack;
@@ -60,17 +61,20 @@ void parse(int c) {
 		break;
 	case 'F':
 		state='X';
+		if(c=='=' && stack>b_stack && stack[-1]=='v') { out1("local"); }
 		out1(c=='=' ? "ident" : "get");
+	case 'P':
 		if(c=='(') { *stack++='f'; *stack++='('; outo('('); break; }
 	case 'X':
 		if(c=='N') { out1("num"); }
 		else if(c=='I') {
 			int l=ident-b_ident;
-			if(l==8&&memcmp("function",b_ident,ident-b_ident)==0) { state='C'; outn("def",closuren); *fstack++=closuren++; out1("args"); }
+			if(l==8&&memcmp("function",b_ident,ident-b_ident)==0) { state='C'; outn("def",closuren); outn("args",closuren); *fstack++=closuren++; }
+			else if(l==3&&memcmp("var",b_ident,ident-b_ident)==0) { *stack++='v'; }
 			else { state='F'; } }
 		else if(c==';') { unstack(0); outo(';'); }
 		else if(c=='(') { *stack++='('; out1("com ("); }
-		else if(c==')') { unstack(0); stack--; }
+		else if(c==')') { unstack(0); stack--; state='P'; }
 		else if(c=='}') { unstack(0); stack--; outn("end",*(--fstack)); }
 		else { unstack(c); *stack++=c; }
 		break;
