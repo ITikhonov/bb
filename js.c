@@ -53,7 +53,8 @@ void parse(int c) {
 	printf("\x1b[01;31m%c:%c[%.*s]\x1b[00m",state,c,(int)(stack-b_stack),b_stack);
 	switch(state) {
 	case 'C':
-		if(c=='{') { *stack++='('; state='X'; outn("def",closuren); }
+		if(c=='I') { out1("arg"); }
+		if(c=='{') { *stack++='('; state='X';  }
 		break;
 	case 'F':
 		state='X';
@@ -63,7 +64,7 @@ void parse(int c) {
 		if(c=='N') { out1("num"); }
 		else if(c=='I') {
 			int l=ident-b_ident;
-			if(l==8&&memcmp("function",b_ident,ident-b_ident)==0) { state='C'; }
+			if(l==8&&memcmp("function",b_ident,ident-b_ident)==0) { state='C'; outn("def",closuren); out1("args"); }
 			else { state='F'; } }
 		else if(c==';') { unstack(0); outo(';'); }
 		else if(c=='(') { *stack++='('; out1("com ("); }

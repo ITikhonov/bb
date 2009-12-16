@@ -15,3 +15,5 @@ pow(2,3);
 i=function() { j=pow(2,3); };
 i();
 
+k=function(x,y) { l=pow(x,y); };
+k(3,4);

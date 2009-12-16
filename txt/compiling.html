@@ -11,7 +11,7 @@ pre{border-left:1px solid black;padding-left:3em}
 <pre>
 x=10;
 print(x);
-r=function(){
+r=function(x,y){
 	var c=x*Math.pow(20,x+2)+3;
 	if(1/x) { print(c); }
 	return x+1;
@@ -24,7 +24,8 @@ r=function(){
 <p><strike>Introduce assignment in mode '3'.</strike></p>
 <p><strike>Remove special handling of assignment (modes 'X' and '2').</strike></p>
 <p><strike>Add closure expression.</strike></p>
-<p>Add closure expression parameters.</p>
+<p><strike>Add closure expression parameters.</strike></p>
+<p>Add closure locals.</p>
 
 
 <h3>Program</h3>
@@ -54,8 +55,8 @@ compile all operators from current opstack and go back to previous opstack.</p>
 <h3>Closures</h3>
 
 <p>Closures begin with</p>
-<pre>function ( ) {</pre>
-<p>and ends with '<code>}</code>'. When we bump into 'function' identifier we switch to mode 'C' and consume everything until '{' seen then we push '(' to opstack to mark new bottom and switch to mode 'X'.</p>
+<pre>function ( a1, a2 ) {</pre>
+<p>and ends with '<code>}</code>'. When we bump into 'function' identifier we switch to mode 'C' and consume everything remembering parameter names until '{' seen then we push '(' to opstack to mark new bottom, compile number of arguments as <code>args <i>n</i></code> and switch to mode 'X'.</p>
 
 <p>When we see '}' in mode 'X' we compile 'ret' and pop out ')' from opstack.</p>
 
