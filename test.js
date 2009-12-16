@@ -17,3 +17,7 @@ i();
 
 k=function(x,y) { l=pow(x,y); };
 k(3,4);
+
+m=function(x,y) { (o=function(x,z) { n=x*y*z; }); o(x,y); };
+m(3,4);
+

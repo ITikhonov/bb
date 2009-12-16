@@ -33,6 +33,7 @@ def setvar(v,z):
 
 while ip<len(prog):
 	l=prog[ip]
+	stderr.write(str((ip,l))+'\n')
 	ip+=1
 	if l[0]=='ident': s.append(l[1])
 	elif l[0]=='num': s.append(float(l[1]))
@@ -62,12 +63,14 @@ while ip<len(prog):
 	elif l[0]=='get': s.append(getvar(l[1]))
 	elif l[0]=='com': pass
 	else: raise Exception(str(l))
-	stderr.write(str((l,r,vs))+'\n')
+	stderr.write('   '+str((r,vs))+'\n')
 
 assert s==[],s
 v=vs[0]
 del v['i']
 del v['k']
-smpl={'a': 13.5, 'c': 0.66666666666666663, 'b': 10.0, 'd': 1.0, 'e':14.666666666666666,'f0':531441.0,'f':31429.891510774083,'pow':pow,'g':3.0,'h':7.0,'j':8.0,'l':81.0}
+del v['o']
+del v['m']
+smpl={'a': 13.5, 'c': 0.66666666666666663, 'b': 10.0, 'd': 1.0, 'e':14.666666666666666,'f0':531441.0,'f':31429.891510774083,'pow':pow,'g':3.0,'h':7.0,'j':8.0,'l':81.0,'n':48.0}
 assert v==smpl, ('\n\n\nhas:  '+str(sorted(v.items()))+'\n\nmust: '+str(sorted(smpl.items())))
 

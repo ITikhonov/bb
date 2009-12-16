@@ -34,7 +34,6 @@ int priocmp(int pl) {
 	return ps<(-pl);
 }
 
-int closuren=0;
 
 void out1(char *i) { printf(CL"%s %.*s"RS,i,(int)(ident-b_ident),b_ident);
 		     fprintf(stderr,"%s %.*s\n",i,(int)(ident-b_ident),b_ident); }
@@ -47,6 +46,9 @@ void unstack(char c) {
 	int pl=c?priority(c):255;
 	while(stack>b_stack && stack[-1]!='(' && priocmp(pl)) { if(stack[-1]!=',') outo(stack[-1]); stack--; }
 }
+
+int b_fstack[1024],*fstack=b_fstack;
+int closuren=0;
 
 int state='X';
 void parse(int c) {
@@ -64,12 +66,12 @@ void parse(int c) {
 		if(c=='N') { out1("num"); }
 		else if(c=='I') {
 			int l=ident-b_ident;
-			if(l==8&&memcmp("function",b_ident,ident-b_ident)==0) { state='C'; outn("def",closuren); out1("args"); }
+			if(l==8&&memcmp("function",b_ident,ident-b_ident)==0) { state='C'; outn("def",closuren); *fstack++=closuren++; out1("args"); }
 			else { state='F'; } }
 		else if(c==';') { unstack(0); outo(';'); }
 		else if(c=='(') { *stack++='('; out1("com ("); }
 		else if(c==')') { unstack(0); stack--; }
-		else if(c=='}') { unstack(0); stack--; outn("end",closuren++); }
+		else if(c=='}') { unstack(0); stack--; outn("end",*(--fstack)); }
 		else { unstack(c); *stack++=c; }
 		break;
 	default:
