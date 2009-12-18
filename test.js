@@ -21,6 +21,6 @@ k(3,4);
 m=function(x,y) { (o=function(x,z) { n=x*y*z; }); o(x,y); };
 m(3,4);
 
-p=function(x,y) { (function(x,z) { var q=x*y*z; r=q; })(x,y); };
-p(3,4);
+p=function(x,y) { return 2+(function(x,z) { var q=x*y*z; return r=q; })(x,y); };
+s=p(3,4);
 

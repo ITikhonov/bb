@@ -51,6 +51,7 @@ while ip<len(prog):
 	elif l[0]=='op*': s.append(s.pop()*s.pop())
 	elif l[0]=='op=': setvar(s.pop(-2),s[-1])
 	elif l[0]=='op;': s.pop()
+	elif l[0]=='opr': ip=rs.pop(); args.pop(); vs.pop(0)
 	elif l[0]=='def': s.append((ip,)); ip=clos[l[1]]
 	elif l[0]=='end': ip=rs.pop(); s.append(None); args.pop(); vs.pop(0)
 	elif l[0]=='args': vs.insert(0,locs[l[1]]);
@@ -81,6 +82,6 @@ del v['k']
 del v['o']
 del v['m']
 del v['p']
-smpl={'a': 13.5, 'c': 0.66666666666666663, 'b': 10.0, 'd': 1.0, 'e':14.666666666666666,'f0':531441.0,'f':31429.891510774083,'pow':pow,'g':3.0,'h':7.0,'j':8.0,'l':81.0,'n':48.0,'r':48.0}
+smpl={'a': 13.5, 'c': 0.66666666666666663, 'b': 10.0, 'd': 1.0, 'e':14.666666666666666,'f0':531441.0,'f':31429.891510774083,'pow':pow,'g':3.0,'h':7.0,'j':8.0,'l':81.0,'n':48.0,'r':48.0,'s':50.0}
 assert v==smpl, ('\n\n\nhas:  '+str(sorted(v.items()))+'\n\nmust: '+str(sorted(smpl.items())))
 

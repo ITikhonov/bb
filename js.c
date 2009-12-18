@@ -23,6 +23,7 @@ int priority(char c) {
 	case '=': return -16;
 	case ',': return 17;
 	case 'v': return 100;
+	case 'r': return 100;
 	default:
 		printf("\n\nNo priority for '%c' (%x)\n",c,c);
 		abort();
@@ -71,6 +72,7 @@ void parse(int c) {
 			int l=ident-b_ident;
 			if(l==8&&memcmp("function",b_ident,ident-b_ident)==0) { state='C'; outn("def",closuren); outn("args",closuren); *fstack++=closuren++; }
 			else if(l==3&&memcmp("var",b_ident,ident-b_ident)==0) { *stack++='v'; }
+			else if(l==6&&memcmp("return",b_ident,ident-b_ident)==0) { *stack++='r'; }
 			else { state='F'; } }
 		else if(c==';') { unstack(0); outo(';'); }
 		else if(c=='(') { *stack++='('; out1("com ("); }
